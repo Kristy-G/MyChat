@@ -159,15 +159,10 @@ public class MainChatController implements Initializable, MessageProcessor {
         File file = new File(str);
         if (!file.exists()) file.createNewFile();
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(str, true))) {
-            bw.write(String.valueOf(message));
+            bw.write(message);
         }
 
-        try(BufferedInputStream bis = new BufferedInputStream(new FileInputStream(str))) {
-            int x;
-            while ((x = bis.read()) >= 0) {
-                System.out.print((char)x);
-            }
-        }
+
     }
 
 }
