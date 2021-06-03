@@ -28,7 +28,7 @@ public class ClientHandler {
     }
 
     public void handle() {
-        new Thread(() -> {
+        chatServer.getExecutorService().execute(() -> {
             try {
 //                while(!Thread.currentThread().isInterrupted() || socket.isConnected()) {
                 authenticate();
@@ -37,7 +37,7 @@ public class ClientHandler {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }).start();
+        });
     }
 
     private void readMessages() throws IOException {

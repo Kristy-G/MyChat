@@ -20,10 +20,11 @@ import org.example.chat_client.network.ChatMessageService;
 import org.example.chat_client.network.MessageProcessor;
 
 import java.awt.*;
-import java.io.IOException;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.ClientInfoStatus;
 import java.util.ResourceBundle;
 
 public class MainChatController implements Initializable, MessageProcessor {
@@ -50,7 +51,7 @@ public class MainChatController implements Initializable, MessageProcessor {
         desktop.browse(new URI("https://docs.google.com/document/d/1wr0YEtIc5yZtKFu-KITqYnBtp8KC28v2FEYUANL0YAM/edit?usp=sharing"));
     }
 
-    public void sendMessage(ActionEvent actionEvent) {
+    public void sendMessage(ActionEvent actionEvent) throws IOException {
         String text = inputField.getText();
         if (text.isEmpty()) return;
         ChatMessage msg = new ChatMessage();
@@ -61,12 +62,13 @@ public class MainChatController implements Initializable, MessageProcessor {
         inputField.clear();
     }
 
-    private void appendTextFromTF(ChatMessage msg) {
+    private void appendTextFromTF(ChatMessage msg) throws IOException {
 //        String msg = inputField.getText();
 //        if (msg.isEmpty()) return;
         String text = String.format("[%s] %s\n", msg.getFrom(), msg.getBody());
         chatArea.appendText(text);
 //        inputField.clear();
+        addToFile(text);
     }
 
     private void showError(Exception e) {
@@ -119,7 +121,13 @@ public class MainChatController implements Initializable, MessageProcessor {
                     System.out.println("Received message");
 
                     switch (message.getMessageType()) {
-                        case PUBLIC -> appendTextFromTF(message);
+                        case PUBLIC -> {
+                            try {
+                                appendTextFromTF(message);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
                         case CLIENT_LIST -> refreshOnlineUsers(message);
                         case AUTH_CONFIRM -> {
                             this.currentName = message.getBody();
@@ -135,7 +143,7 @@ public class MainChatController implements Initializable, MessageProcessor {
         this.onlineUsers.setItems(FXCollections.observableArrayList(message.getOnlineUsers()));
     }
 
-    public void sendAuth(ActionEvent actionEvent) {
+    public void sendAuth(ActionEvent actionEvent) throws IOException {
         String log = loginField.getText();
         String pass = passwordField.getText();
         if (log.isEmpty() || pass.isEmpty()) return;
@@ -145,4 +153,16 @@ public class MainChatController implements Initializable, MessageProcessor {
         msg.setPassword(pass);
         messageService.send(msg.marshall());
     }
+
+    public void addToFile(String message) throws IOException {
+        String str = "chat_client/src/main/java/files/" + this.currentName + ".txt";
+        File file = new File(str);
+        if (!file.exists()) file.createNewFile();
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(str, true))) {
+            bw.write(message);
+        }
+
+
+    }
+
 }
